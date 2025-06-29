@@ -1,0 +1,11 @@
+# Crediting
+
+This project makes extensive use of tools, scripts, and workflows provided by the Chandra X-ray Center (CXC).
+
+Most of the command-line procedures, scientific methods, and data processing utilities are based on resources from the official CIAO documentation and software suite:
+https://cxc.cfa.harvard.edu/ciao
+
+We gratefully acknowledge the CIAO team and the broader Chandra X-ray Observatory community for making these tools publicly available and well-documented.
+
+Please cite the appropriate CIAO references if using this workflow in published work:  
+https://cxc.cfa.harvard.edu/ciao/citations.html
