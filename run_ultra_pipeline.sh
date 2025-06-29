@@ -1,6 +1,6 @@
 #!/bin/bash
-
-# Usage: ./run_ultra_use_pipeline.sh <OBS_ID>
+# to use must run chmod +x run_ultra_pipeline.sh
+# Usage: ./run_ultra_pipeline.sh <OBS_ID>
 
 obsid=$1
 
