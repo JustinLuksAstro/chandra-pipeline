@@ -55,6 +55,8 @@ ymin1=$(echo "$ycenter - $pix_radius" | bc)
 ymax1=$(echo "$ycenter + $pix_radius" | bc)
 
 dmcopy "acisf${obsid}_repro_evt2.fits[bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" obs_image.fits
+dmcopy "acisf${obsid}_repro_evt2.fits[bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${ymax1}:0.25]" obs_image_0.25.fits
+
 
 # Loop over energy bands
 for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
