@@ -1,0 +1,108 @@
+#!/bin/bash
+# This file works to create three seperate psf files at three seperate energy bands
+# gives pileup values, and an enhanced image
+# Usage: ./run_energy_psf.sh <OBS_ID>
+
+obsid=$1
+
+if [ -z "$obsid" ]; then
+  echo "Usage: $0 <OBS_ID>"
+  exit 1
+fi
+
+# Download and reprocess
+download_chandra_obsid $obsid
+cd $obsid
+chandra_repro . repro/
+cd repro
+
+# Launch DS9 so user can inspect source and get coordinates
+ds9 acisf${obsid}_repro_evt2.fits &
+
+# Wait for user to input coordinates
+echo "Please inspect the file in DS9 and enter the coordinates when ready."
+read -p "Enter pixel X center: " xcenter
+read -p "Enter pixel Y center: " ycenter
+read -p "Enter source radius (in pixels): " srcrad
+read -p "Enter background X center: " x_bkg
+read -p "Enter background Y center: " y_bkg
+read -p "Enter background radius (in pixels): " bkgrad
+read -p "Enter RA (HH:MM:SS): " ra_hms
+read -p "Enter Dec (±DD:MM:SS): " dec_dms
+
+# Convert RA/Dec to decimal
+ra_dec=$(python3 -c "from astropy.coordinates import SkyCoord; c = SkyCoord('$ra_hms $dec_dms', unit=('hourangle', 'deg')); print(f'{c.ra.deg} {c.dec.deg}')")
+ra=$(echo $ra_dec | awk '{print $1}')
+dec=$(echo $ra_dec | awk '{print $2}')
+
+# Run specextract
+specextract \
+  infile="acisf${obsid}_repro_evt2.fits[sky=circle(${xcenter},${ycenter},${srcrad})]" \
+  outroot=${obsid} \
+  bkgfile="acisf${obsid}_repro_evt2.fits[sky=circle(${x_bkg},${y_bkg},${bkgrad})]" \
+  bkgresp=no weight=no correctpsf=yes grouptype=NONE verbose=0 mode=h
+
+# Pileup Analysis
+dmcopy "acisf${obsid}_repro_evt2.fits[bin sky=1]" acisf${obsid}_image.fits
+pileup_map acisf${obsid}_image.fits pileup.fits
+dmstat "pileup.fits"
+
+# Deconvolution region (6x6 arcsec)
+pix_radius=6.1
+xmin1=$(echo "$xcenter - $pix_radius" | bc)
+xmax1=$(echo "$xcenter + $pix_radius" | bc)
+ymin1=$(echo "$ycenter - $pix_radius" | bc)
+ymax1=$(echo "$ycenter + $pix_radius" | bc)
+
+dmcopy "acisf${obsid}_repro_evt2.fits[bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" obs_image.fits
+
+# Loop over energy bands
+for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
+  band_label=""
+  if [[ "$band" == "0.5:3.0" ]]; then
+    band_label="low"
+  elif [[ "$band" == "3.0:6.0" ]]; then
+    band_label="medium"
+  elif [[ "$band" == "6.0:7.0" ]]; then
+    band_label="high"
+  fi
+
+  echo "Now launching Sherpa for band $band_label ($band keV). Please run the following commands manually:"
+  echo "load_data(\"${obsid}.pi\")"
+  echo "subtract()"
+  echo "notice(${band})"
+  echo "set_source(polynom1d.truespec)"
+  echo "truespec.c0 = 1"
+  echo "photonflux = get_ratio_plot().y"
+  echo "energy = get_ratio_plot().x"
+  echo "photonflux[photonflux <= 0] = 1e-12"
+  echo "save_arrays(\"${obsid}_${band_label}.dat\", [energy, photonflux], [\"keV\", \"ph_s_cm2_keV\"], ascii=True)"
+  echo "Then exit Sherpa when done."
+  sherpa
+
+  # Simulate PSF
+  pset simulate_psf infile=acisf${obsid}_repro_evt2.fits
+  pset simulate_psf outroot=${obsid}_marxsim_${band_label}
+  pset simulate_psf ra=$ra
+  pset simulate_psf dec=$dec
+  pset simulate_psf spectrum=${obsid}_${band_label}.dat
+  pset simulate_psf blur=0.19
+  pset simulate_psf readout_streak=yes
+  pset simulate_psf pileup=no
+  pset simulate_psf ideal=no
+  pset simulate_psf extended=no
+  pset simulate_psf energy=$band
+
+  simulate_psf
+
+  # Get total photon counts in band
+  echo "Getting photon counts in band $band_label"
+  dmcopy "acisf${obsid}_repro_evt2.fits[energy=${band}][bin sky=1]" counts_${band_label}.fits
+  dmstat counts_${band_label}.fits
+
+done
+
+# PSF Hook Feature
+roll=$(dmkeypar acisf${obsid}_repro_evt2.fits ROLL_NOM echo+)
+make_psf_asymmetry_region acisf${obsid}_repro_evt2.fits hook.reg $xcenter $ycenter format=ds9
+ds9 acisf${obsid}_repro_evt2.fits -region hook.reg &
