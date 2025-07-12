@@ -72,7 +72,7 @@ for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
   echo "Now launching Sherpa for band $band_label ($band keV). Please run the following commands manually:"
   echo "load_data(\"${obsid}.pi\")"
   echo "subtract()"
-  echo "notice("${band}")"
+  echo "notice(\"${band}\")"
   echo "set_source(polynom1d.truespec)"
   echo "truespec.c0 = 1"
   echo "photonflux = get_ratio_plot().y"
