@@ -96,10 +96,10 @@ for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
 
   simulate_psf
 
-  # Get total photon counts in band
-  echo "Getting photon counts in band $band_label"
-  dmcopy "acisf${obsid}_repro_evt2.fits[energy=${band}][bin sky=1]" counts_${band_label}.fits
-  dmstat counts_${band_label}.fits
+  # Get photon counts in 6x6 arcsec source region with 0.25 arcsec binning
+  echo "Getting 6x6 arcsec photon counts in band $band_label (0.25 arcsec binning)"
+  dmcopy "acisf${obsid}_repro_evt2.fits[energy=${band}][bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${ymax1}:0.25]" counts_${band_label}_region_025.fits
+  dmstat counts_${band_label}_region_025.fits
 
 done
 
