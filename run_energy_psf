@@ -59,13 +59,13 @@ dmcopy "acisf${obsid}_repro_evt2.fits[bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${
 
 
 # Loop over energy bands
-for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
+for band in "500:3000" "3000:6000" "6000:7000"; do
   band_label=""
-  if [[ "$band" == "0.5:3.0" ]]; then
+  if [[ "$band" == "500:3000" ]]; then
     band_label="low"
-  elif [[ "$band" == "3.0:6.0" ]]; then
+  elif [[ "$band" == "3000:6000" ]]; then
     band_label="medium"
-  elif [[ "$band" == "6.0:7.0" ]]; then
+  elif [[ "$band" == "6000:7000" ]]; then
     band_label="high"
   fi
 
@@ -96,12 +96,26 @@ for band in "0.5:3.0" "3.0:6.0" "6.0:7.0"; do
 
   simulate_psf
 
-  # Get photon counts in 6x6 arcsec source region with 0.25 arcsec binning
-  echo "Getting 6x6 arcsec photon counts in band $band_label (0.25 arcsec binning)"
-  dmcopy "acisf${obsid}_repro_evt2.fits[energy=${band}][bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${ymax1}:0.25]" counts_${band_label}_region_025.fits
-  dmstat counts_${band_label}_region_025.fits
-
 done
+
+# Define rectangular filter
+region="[x=${xmin1}:${xmax1},y=${ymin1}:${ymax1}]"
+
+# Energy bands in eV
+echo "Getting counts in 6x6 arcsec rectangular region ($xmin1:$xmax1, $ymin1:$ymax1 pixels):"
+
+echo "Total 0.5–7.0 keV:"
+dmlist "acisf${obsid}_repro_evt2.fits[energy=500:7000]$region" counts
+
+echo "Low band 0.5–3.0 keV:"
+dmlist "acisf${obsid}_repro_evt2.fits[energy=500:3000]$region" counts
+
+echo "Medium band 3.0–6.0 keV:"
+dmlist "acisf${obsid}_repro_evt2.fits[energy=3000:6000]$region" counts
+
+echo "High band 6.0–7.0 keV:"
+dmlist "acisf${obsid}_repro_evt2.fits[energy=6000:7000]$region" counts
+
 
 # PSF Hook Feature
 roll=$(dmkeypar acisf${obsid}_repro_evt2.fits ROLL_NOM echo+)
