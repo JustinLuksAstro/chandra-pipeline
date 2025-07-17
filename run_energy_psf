@@ -117,6 +117,23 @@ echo "High band 6.0–7.0 keV:"
 dmlist "acisf${obsid}_repro_evt2.fits[energy=6000:7000]$region" counts
 
 
+
+# Soft: 500–3000 eV
+dmcopy "acisf${obsid}_repro_evt2.fits[energy=500:3000][bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" \
+       photons_500_3000.fits
+
+# Mid: 3000–6000 eV
+dmcopy "acisf${obsid}_repro_evt2.fits[energy=3000:6000][bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" \
+       photons_3000_6000.fits
+
+# Hard: 6000–7000 eV
+dmcopy "acisf${obsid}_repro_evt2.fits[energy=6000:7000][bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" \
+       photons_6000_7000.fits
+
+
+
+
+
 # PSF Hook Feature
 roll=$(dmkeypar acisf${obsid}_repro_evt2.fits ROLL_NOM echo+)
 make_psf_asymmetry_region acisf${obsid}_repro_evt2.fits hook.reg $xcenter $ycenter format=ds9
