@@ -59,13 +59,13 @@ dmcopy "acisf${obsid}_repro_evt2.fits[bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${
 
 
 # Loop over energy bands
-for band in "500:3000" "3000:6000" "6000:7000"; do
+for band in "0.5:3" "3:6" "6:7"; do
   band_label=""
-  if [[ "$band" == "500:3000" ]]; then
+  if [[ "$band" == "0.5:3" ]]; then
     band_label="low"
-  elif [[ "$band" == "3000:6000" ]]; then
+  elif [[ "$band" == "3:6" ]]; then
     band_label="medium"
-  elif [[ "$band" == "6000:7000" ]]; then
+  elif [[ "$band" == "6:7" ]]; then
     band_label="high"
   fi
 
@@ -122,7 +122,7 @@ dmlist "acisf${obsid}_repro_evt2.fits[energy=6000:7000]$region" counts
 echo "Reminder: generate full-range (500–7000 eV) photon flux .dat file in Sherpa:"
 echo "load_data(\"${obsid}.pi\")"
 echo "subtract()"
-echo "notice(\"500:7000\")"
+echo "notice(\"0.5:7\")"
 echo "set_source(polynom1d.truespec)"
 echo "truespec.c0 = 1"
 echo "photonflux = get_ratio_plot().y"
