@@ -118,6 +118,49 @@ dmlist "acisf${obsid}_repro_evt2.fits[energy=6000:7000]$region" counts
 
 
 
+# Reminder to generate full .dat spectrum in Sherpa manually
+echo "Reminder: generate full-range (500–7000 eV) photon flux .dat file in Sherpa:"
+echo "load_data(\"${obsid}.pi\")"
+echo "subtract()"
+echo "notice(\"500:7000\")"
+echo "set_source(polynom1d.truespec)"
+echo "truespec.c0 = 1"
+echo "photonflux = get_ratio_plot().y"
+echo "energy = get_ratio_plot().x"
+echo "photonflux[photonflux <= 0] = 1e-12"
+echo "save_arrays(\"${obsid}_full.dat\", [energy, photonflux], [\"keV\", \"ph_s_cm2_keV\"], ascii=True)"
+echo "Then exit Sherpa when done."
+sherpa
+
+# Simulate PSF for full band
+pset simulate_psf infile=acisf${obsid}_repro_evt2.fits
+pset simulate_psf outroot=${obsid}_marxsim_full
+pset simulate_psf ra=$ra
+pset simulate_psf dec=$dec
+pset simulate_psf spectrum=${obsid}_full.dat
+pset simulate_psf blur=0.19
+pset simulate_psf readout_streak=yes
+pset simulate_psf pileup=no
+pset simulate_psf ideal=no
+pset simulate_psf extended=no
+
+simulate_psf
+
+
+# Make subpixel binned PSF
+dmcopy "${obsid}_marxsim_full_projrays.fits[bin x=${xmin1}:${xmax1}:0.25,y=${ymin1}:${ymax1}:0.25]" \
+       ${obsid}_marxsim_projrays_025.fits
+
+# Run deconvolution
+arestore obs_image_025.fits \
+         ${obsid}_marxsim_projrays_025.fits \
+         ${obsid}_deconvolved_image_025.fits \
+         method=lucy numiter=100
+
+
+
+
+
 # Soft: 500–3000 eV
 dmcopy "acisf${obsid}_repro_evt2.fits[energy=500:3000][bin x=${xmin1}:${xmax1}:1,y=${ymin1}:${ymax1}:1]" \
        photons_500_3000.fits
