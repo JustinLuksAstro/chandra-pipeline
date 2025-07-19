@@ -181,3 +181,4 @@ dmcopy "acisf${obsid}_repro_evt2.fits[energy=6000:7000][bin x=${xmin1}:${xmax1}:
 roll=$(dmkeypar acisf${obsid}_repro_evt2.fits ROLL_NOM echo+)
 make_psf_asymmetry_region acisf${obsid}_repro_evt2.fits hook.reg $xcenter $ycenter format=ds9
 ds9 acisf${obsid}_repro_evt2.fits -region hook.reg &
+ds9 obs_image_0.25.fits &
