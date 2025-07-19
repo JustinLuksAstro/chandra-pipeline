@@ -152,7 +152,7 @@ dmcopy "${obsid}_marxsim_full_projrays.fits[bin x=${xmin1}:${xmax1}:0.25,y=${ymi
        ${obsid}_marxsim_projrays_025.fits
 
 # Run deconvolution
-arestore obs_image_025.fits \
+arestore obs_image_0.25.fits \
          ${obsid}_marxsim_projrays_025.fits \
          ${obsid}_deconvolved_image_025.fits \
          method=lucy numiter=100
